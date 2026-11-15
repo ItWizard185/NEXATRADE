@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TradeFlow | public trading & payouts</title>
+  <!-- Font & icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    body {
+      background: #f6f9fc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+    }
+
+    /* main card – realistic trading dashboard widget */
+    .trading-panel {
+      max-width: 1300px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 2.5rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.02);
+      overflow: hidden;
+      transition: all 0.2s ease;
+    }
+
+    /* header with brand + user balance */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2.5rem;
+      background: #ffffff;
+      border-bottom: 1px solid #e9edf4;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .brand i {
+      font-size: 2rem;
+      color: #0b1e3a;
+      background: #eef3fc;
+      padding: 0.5rem;
+      border-radius: 14px;
+    }
+
+    .brand h1 {
+      font-size: 1.7rem;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #0b1e3a;
+    }
+
+    .brand span {
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: #5d6f88;
+      background: #f0f4fa;
+      padding: 0.2rem 0.8rem;
+      border-radius: 30px;
+      margin-left: 0.5rem;
+    }
+
+    .user-balance {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: #f8fafd;
+      padding: 0.7rem 1.5rem;
+      border-radius: 40px;
+      border: 1px solid #dce5f0;
+    }
+
+    .user-balance i {
+      color: #1f8b4c;
+      font-size: 1.2rem;
+    }
+
+    .balance-amount {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #0b1e3a;
+      letter-spacing: -0.3px;
+    }
+
+    .balance-amount small {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #4f6582;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #13294b, #1e3b6b);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    /* main layout – left chart + right deposit/withdraw */
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 0;
+    }
+
+    /* LEFT – realistic trading chart area */
+    .chart-area {
+      padding: 2rem 2rem 2rem 2.5rem;
+      background: #ffffff;
+    }
+
+    .asset-pair {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .pair-name {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #0b1e3a;
+    }
+
+    .pair-name i {
+      color: #f0b90b;
+      margin-left: 0.3rem;
+      font-size: 1.2rem;
+    }
+
+    .price-display {
+      display: flex;
+      align-items: baseline;
+      gap: 0.8rem;
+    }
+
+    .current-price {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #0b1e3a;
+      letter-spacing: -1px;
+    }
+
+    .change-badge {
+      background: #e4f5e9;
+      color: #1f8b4c;
+      padding: 0.3rem 0.9rem;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .change-badge i {
+      font-size: 0.8rem;
+    }
+
+    /* candlestick simulation – looks like a real chart */
+    .chart-container {
+      background: #fafcff;
+      border-radius: 24px;
+      padding: 1.5rem 1rem 1rem 1rem;
+      border: 1px solid #e1e9f2;
+      margin-bottom: 1.8rem;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 180px;
+      margin-bottom: 0.8rem;
+    }
+
+    .bar {
+      flex: 1;
+      background: #bdd4f0;
+      border-radius: 6px 6px 2px 2px;
+      transition: 0.15s;
+      min-width: 4px;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .bar.green {
+      background: linear-gradient(to top, #2bb673, #4ac98b);
+    }
+
+    .bar.red {
+      background: linear-gradient(to top, #e25c5c, #f17c7c);
+    }
+
+    .chart-labels {
+      display: flex;
+      justify-content: space-between;
+      color: #6f7e94;
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+      padding: 0 0.2rem;
+    }
+
+    /* order book / recent trades small widget */
+    .market-info {
+      display: flex;
+      gap: 2rem;
+      background: #f8fafd;
+      padding: 1.2rem 1.5rem;
+      border-radius: 20px;
+      border: 1px solid #e1e9f2;
+      margin-top: 0.5rem;
+    }
+
+    .info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .info-item .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #7a8aa3;
+      font-weight: 600;
+    }
+
+    .info-item .value {
+      font-weight: 600;
+      color: #0b1e3a;
+      font-size: 1.1rem;
+    }
+
+    .info-item .value i {
+      font-size: 0.8rem;
+      margin-right: 0.25rem;
+      color: #1f8b4c;
+    }
+
+    /* RIGHT – deposit & withdraw panel */
+    .transaction-panel {
+      background: #ffffff;
+      border-left: 1px solid #e9edf4;
+      padding: 2rem 2rem 2rem 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    .action-tabs {
+      display: flex;
+      gap: 0.5rem;
+      background: #f0f5fb;
+      padding: 0.4rem;
+      border-radius: 40px;
+      margin-bottom: 0.5rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.8rem 1rem;
+      border-radius: 30px;
+      border: none;
+      background: transparent;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #4d627a;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn i {
+      font-size: 0.95rem;
+    }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: #0b1e3a;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    }
+
+    .tab-btn.deposit.active i {
+      color: #1f8b4c;
+    }
+
+    .tab-btn.withdraw.active i {
+      color: #d97706;
+    }
+
+    /* form */
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #2c3e5c;
+      margin-bottom: 0.6rem;
+      letter-spacing: -0.2px;
+    }
+
+    .input-wrapper {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border: 1.5px solid #dae3ef;
+      border-radius: 18px;
+      padding: 0.1rem 0.1rem 0.1rem 1.2rem;
+      transition: 0.15s;
+    }
+
+    .input-wrapper:focus-within {
+      border-color: #0b1e3a;
+      box-shadow: 0 0 0 4px rgba(11, 30, 58, 0.06);
+    }
+
+    .input-wrapper i {
+      color: #7f92aa;
+      font-size: 1rem;
+      margin-right: 0.6rem;
+    }
+
+    .input-wrapper input {
+      border: none;
+      padding: 1rem 0.8rem 1rem 0.2rem;
+      font-size: 1rem;
+      font-weight: 500;
+      width: 100%;
+      outline: none;
+      background: transparent;
+      color: #0b1e3a;
+    }
+
+    .input-wrapper input::placeholder {
+      color: #a3b5cc;
+      font-weight: 400;
+    }
+
+    .input-wrapper .currency-tag {
+      background: #f0f5fb;
+      padding: 0.7rem 1.2rem;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #1b2f4a;
+      margin-right: 0.2rem;
+    }
+
+    .quick-amounts {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 0.7rem;
+    }
+
+    .quick-amounts button {
+      background: #f2f7ff;
+      border: 1px solid #dae3ef;
+      color: #1b2f4a;
+      padding: 0.45rem 1rem;
+      border-radius: 40px;
+      font-weight: 500;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: 0.15s;
+      flex: 1;
+    }
+
+    .quick-amounts button:hover {
+      background: #e2ecfe;
+      border-color: #b8cbe2;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: #0b1e3a;
+      border: none;
+      padding: 1.1rem;
+      border-radius: 18px;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      transition: 0.15s;
+      box-shadow: 0 10px 20px -8px rgba(11, 30, 58, 0.3);
+      margin-top: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      background: #132b4f;
+      transform: scale(1.01);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.99);
+    }
+
+    .btn-primary.withdraw-btn {
+      background: #d97706;
+      box-shadow: 0 10px 20px -8px rgba(217, 119, 6, 0.3);
+    }
+
+    .btn-primary.withdraw-btn:hover {
+      background: #b85f04;
+    }
+
+    .withdraw-note {
+      font-size: 0.8rem;
+      background: #fff8ec;
+      padding: 0.8rem 1rem;
+      border-radius: 16px;
+      color: #9b6b1d;
+      border: 1px solid #ffe6bf;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-top: 0.5rem;
+    }
+
+    .withdraw-note i {
+      font-size: 1rem;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      color: #b0c1d6;
+      font-size: 0.8rem;
+      font-weight: 500;
+      gap: 1rem;
+      margin: 0.2rem 0;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: #e4ebf5;
+    }
+
+    .fee-info {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: #6d7f99;
+      margin-top: 0.2rem;
+    }
+
+    /* toast notification (realistic) */
+    .toast-message {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #0b1e3a;
+      color: white;
+      padding: 1rem 2rem;
+      border-radius: 60px;
+      font-weight: 500;
+      box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      pointer-events: none;
+      font-size: 0.95rem;
+      z-index: 9999;
+      white-space: nowrap;
+      backdrop-filter: blur(6px);
+    }
+
+    .toast-message.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    .toast-message i {
+      color: #6ee7b7;
+      font-size: 1.2rem;
+    }
+
+    /* responsive */
+    @media (max-width: 1000px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+      .transaction-panel {
+        border-left: none;
+        border-top: 1px solid #e9edf4;
+        padding: 2rem;
+      }
+      .top-bar {
+        padding: 1.2rem 1.8rem;
+      }
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 0.5rem;
+      }
+      .brand h1 {
+        font-size: 1.3rem;
+      }
+      .brand span {
+        display: none;
+      }
+      .user-balance {
+        padding: 0.5rem 1rem;
+      }
+      .balance-amount {
+        font-size: 1.1rem;
+      }
+      .chart-area {
+        padding: 1.5rem;
+      }
+      .pair-name {
+        font-size: 1.3rem;
+      }
+      .current-price {
+        font-size: 1.4rem;
+      }
+      .market-info {
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+      .transaction-panel {
+        padding: 1.5rem;
+      }
+      .toast-message {
+        white-space: normal;
+        text-align: center;
+        width: 90%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="trading-panel">
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <div class="brand">
+        <i class="fas fa-chart-line"></i>
+        <h1>TradeFlow <span>public</span></h1>
+      </div>
+      <div class="user-balance">
+        <i class="fas fa-wallet"></i>
+        <div class="balance-amount" id="balanceDisplay">$12,840.50 <small>USD</small></div>
+        <div class="avatar">JD</div>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT (chart + deposit/withdraw) -->
+    <div class="main-content">
+      <!-- LEFT: trading chart -->
+      <div class="chart-area">
+        <div class="asset-pair">
+          <div class="pair-name">BTC/USD <i class="fas fa-chevron-down"></i></div>
+          <div class="price-display">
+            <div class="current-price" id="btcPrice">$63,842.10</div>
+            <div class="change-badge"><i class="fas fa-arrow-up"></i> +2.34%</div>
+          </div>
+        </div>
+
+        <!-- candlestick-like chart (realistic simulation) -->
+        <div class="chart-container">
+          <div class="chart-bars" id="chartBars">
+            <!-- JS will generate bars -->
+          </div>
+          <div class="chart-labels">
+            <span>09:00</span>
+            <span>11:00</span>
+            <span>13:00</span>
+            <span>15:00</span>
+            <span>17:00</span>
+            <span>19:00</span>
+          </div>
+        </div>
+
+        <!-- quick market stats -->
+        <div class="market-info">
+          <div class="info-item">
+            <span class="label">24h volume</span>
+            <span class="value"><i class="fas fa-chart-simple"></i> $1.84B</span>
+          </div>
+          <div class="info-item">
+            <span class="label">24h high</span>
+            <span class="value">$64,210</span>
+          </div>
+          <div class="info-item">
+            <span class="label">24h low</span>
+            <span class="value">$62,150</span>
+          </div>
+          <div class="info-item">
+            <span class="label">open interest</span>
+            <span class="value">$7.2M</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: deposit / withdraw panel -->
+      <div class="transaction-panel">
+        <!-- tabs -->
+        <div class="action-tabs">
+          <button class="tab-btn deposit active" id="depositTab"><i class="fas fa-arrow-down"></i> Deposit</button>
+          <button class="tab-btn withdraw" id="withdrawTab"><i class="fas fa-arrow-up"></i> Withdraw</button>
+        </div>
+
+        <!-- DEPOSIT form (default visible) -->
+        <div id="depositForm">
+          <div class="form-group">
+            <label>Amount to deposit</label>
+            <div class="input-wrapper">
+              <i class="fas fa-dollar-sign"></i>
+              <input type="number" id="depositAmount" placeholder="0.00" min="1" step="0.01" value="100">
+              <span class="currency-tag">USD</span>
+            </div>
+            <div class="quick-amounts">
+              <button data-amount="50">$50</button>
+              <button data-amount="100">$100</button>
+              <button data-amount="250">$250</button>
+              <button data-amount="500">$500</button>
+            </div>
+          </div>
+
+          <div class="fee-info">
+            <span>Instant deposit</span>
+            <span>No fee</span>
+          </div>
+
+          <button class="btn-primary" id="depositBtn"><i class="fas fa-circle-plus"></i> Deposit funds</button>
+          <div class="divider">secure</div>
+          <div style="font-size:0.8rem; color:#6a7d98; text-align:center; display:flex; justify-content:center; gap:0.5rem;">
+            <i class="fas fa-lock"></i> 256-bit SSL encrypted
+          </div>
+        </div>
+
+        <!-- WITHDRAW form (hidden by default) -->
+        <div id="withdrawForm" style="display: none;">
+          <div class="form-group">
+            <label>Amount to withdraw</label>
+            <div class="input-wrapper">
+              <i class="fas fa-dollar-sign"></i>
+              <input type="number" id="withdrawAmount" placeholder="0.00" min="1" step="0.01" value="100">
+              <span class="currency-tag">USD</span>
+            </div>
+            <div class="quick-amounts">
+              <button data-withdraw="50">$50</button>
+              <button data-withdraw="100">$100</button>
+              <button data-withdraw="250">$250</button>
+              <button data-withdraw="500">$500</button>
+            </div>
+          </div>
+
+          <div class="fee-info">
+            <span>Processing time</span>
+            <span>~2 hours</span>
+          </div>
+          <div class="fee-info" style="margin-bottom: 0.5rem;">
+            <span>Network fee</span>
+            <span>$1.20</span>
+          </div>
+
+          <button class="btn-primary withdraw-btn" id="withdrawBtn"><i class="fas fa-circle-up"></i> Request withdrawal</button>
+
+          <div class="withdraw-note">
+            <i class="fas fa-shield-halved"></i>
+            <span>Withdrawals are verified. You can only withdraw available profits.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- toast notification -->
+  <div class="toast-message" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastText">Success!</span>
+  </div>
+
+  <script>
+    (function() {
+      // ----- STATE & ELEMENTS -----
+      let balance = 12840.50;        // initial balance
+      const balanceEl = document.getElementById('balanceDisplay');
+      const depositAmountInput = document.getElementById('depositAmount');
+      const withdrawAmountInput = document.getElementById('withdrawAmount');
+      const depositTab = document.getElementById('depositTab');
+      const withdrawTab = document.getElementById('withdrawTab');
+      const depositForm = document.getElementById('depositForm');
+      const withdrawForm = document.getElementById('withdrawForm');
+      const depositBtn = document.getElementById('depositBtn');
+      const withdrawBtn = document.getElementById('withdrawBtn');
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toastText');
+
+      // helper: update balance display
+      function updateBalanceDisplay() {
+        balanceEl.innerHTML = `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <small>USD</small>`;
+      }
+
+      // show toast message
+      function showToast(message, isError = false) {
+        toastText.textContent = message;
+        toast.style.background = isError ? '#b91c1c' : '#0b1e3a';
+        const icon = toast.querySelector('i');
+        if (isError) {
+          icon.className = 'fas fa-exclamation-circle';
+          icon.style.color = '#fecaca';
+        } else {
+          icon.className = 'fas fa-check-circle';
+          icon.style.color = '#6ee7b7';
+        }
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2800);
+      }
+
+      // ----- TAB SWITCHING -----
+      function setActiveTab(tab) {
+        if (tab === 'deposit') {
+          depositTab.classList.add('active');
+          withdrawTab.classList.remove('active');
+          depositForm.style.display = 'block';
+          withdrawForm.style.display = 'none';
+        } else {
+          withdrawTab.classList.add('active');
+          depositTab.classList.remove('active');
+          depositForm.style.display = 'none';
+          withdrawForm.style.display = 'block';
+        }
+      }
+
+      depositTab.addEventListener('click', () => setActiveTab('deposit'));
+      withdrawTab.addEventListener('click', () => setActiveTab('withdraw'));
+
+      // ----- QUICK AMOUNT BUTTONS (deposit) -----
+      document.querySelectorAll('[data-amount]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const amount = e.target.getAttribute('data-amount');
+          depositAmountInput.value = amount;
+        });
+      });
+
+      // ----- QUICK AMOUNT BUTTONS (withdraw) -----
+      document.querySelectorAll('[data-withdraw]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const amount = e.target.getAttribute('data-withdraw');
+          withdrawAmountInput.value = amount;
+        });
+      });
+
+      // ----- DEPOSIT ACTION -----
+      depositBtn.addEventListener('click', () => {
+        const amount = parseFloat(depositAmountInput.value);
+        if (isNaN(amount) || amount <= 0) {
+          showToast('Please enter a valid deposit amount', true);
+          return;
+        }
+        if (amount > 100000) {
+          showToast('Deposit limit is $100,000 per transaction', true);
+          return;
+        }
+        // add to balance
+        balance += amount;
+        updateBalanceDisplay();
+        showToast(`$${amount.toFixed(2)} deposited successfully!`);
+        // optional: reset input to 0, but keep some value for convenience
+        depositAmountInput.value = '100';
+      });
+
+      // ----- WITHDRAW ACTION (only if balance covers amount) -----
+      withdrawBtn.addEventListener('click', () => {
+        const amount = parseFloat(withdrawAmountInput.value);
+        if (isNaN(amount) || amount <= 0) {
+          showToast('Please enter a valid withdrawal amount', true);
+          return;
+        }
+        const networkFee = 1.20; // small fee for realism
+        const totalDeduction = amount + networkFee;
+
+        if (totalDeduction > balance) {
+          showToast(`Insufficient funds. You need $${totalDeduction.toFixed(2)} (incl. fee)`, true);
+          return;
+        }
+
+        // deduct from balance
+        balance -= totalDeduction;
+        updateBalanceDisplay();
+        showToast(`Withdrawal of $${amount.toFixed(2)} requested. Fee $1.20.`);
+        withdrawAmountInput.value = '100';
+        // note: in a real app you'd trigger a payout process
+      });
+
+      // ----- DYNAMIC CHART BARS (realistic fluctuating) -----
+      function generateChartBars() {
+        const chartBars = document.getElementById('chartBars');
+        if (!chartBars) return;
+        chartBars.innerHTML = '';
+        const barCount = 22; // enough to look dense & realistic
+        const heights = [];
+        // generate a semi-random trend with some green/red
+        for (let i = 0; i < barCount; i++) {
+          // simulate price movement: upward trend with noise
+          let baseHeight = 30 + (i * 2.5); // gradual increase
+          // add noise, but keep between 15 and 160
+          let noise = Math.sin(i * 0.9) * 12 + (Math.random() * 18 - 9);
+          let height = Math.min(160, Math.max(20, baseHeight + noise));
+          heights.push(height);
+        }
+
+        // determine color: green if higher than previous, red if lower
+        for (let i = 0; i < barCount; i++) {
+          const bar = document.createElement('div');
+          bar.classList.add('bar');
+          // first bar neutral? we'll set based on comparison
+          if (i > 0) {
+            if (heights[i] >= heights[i - 1]) {
+              bar.classList.add('green');
+            } else {
+              bar.classList.add('red');
+            }
+          } else {
+            // first bar can be green/red randomly
+            bar.classList.add(Math.random() > 0.5 ? 'green' : 'red');
+          }
+          // set height as percentage relative to 180px container
+          const heightPercent = (heights[i] / 180) * 100;
+          bar.style.height = heightPercent + '%';
+          chartBars.appendChild(bar);
+        }
+      }
+
+      // optional: update BTC price with slight variation every 20 seconds (for realism)
+      function updatePriceTicker() {
+        const priceEl = document.getElementById('btcPrice');
+        if (!priceEl) return;
+        // base price around 63842 with small random walk
+        const base = 63842.10;
+        const variation = (Math.random() * 200 - 100); // -100 to +100
+        const newPrice = base + variation;
+        priceEl.textContent = `$${newPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        // also update change badge slightly? keep it simple
+      }
+
+      // initialize chart
+      generateChartBars();
+
+      // refresh chart every 45 seconds to simulate market movement (realistic)
+      setInterval(() => {
+        generateChartBars();
+        updatePriceTicker();
+      }, 45000);
+
+      // also call once on load
+      updatePriceTicker();
+
+      // ensure balance displayed correctly on load
+      updateBalanceDisplay();
+
+      // Deposit amount placeholder init
+      depositAmountInput.value = '100';
+      withdrawAmountInput.value = '100';
+
+      // Prevent negative numbers via input validation (on blur)
+      depositAmountInput.addEventListener('blur', function() {
+        if (this.value < 1) this.value = 1;
+      });
+      withdrawAmountInput.addEventListener('blur', function() {
+        if (this.value < 1) this.value = 1;
+      });
+
+      // simulate a small network delay on button clicks? no, just instant feedback.
+      // also add 'Enter' key support for realistic form submission
+      depositAmountInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') depositBtn.click();
+      });
+      withdrawAmountInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') withdrawBtn.click();
+      });
+    })();
+  </script>
+</body>
+</html>
